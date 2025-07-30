@@ -74,7 +74,7 @@ def display_activity(username):
         Panel.fit(
             table,
             title="gitlog-cli",
-            subtitle="🧰 Terminal GitHub Activity Tracker",
+            subtitle="🧰 Terminal GitHub Activity Tracker by Kenean Dita",
             border_style="magenta",
             padding=(1, 2),
         )
