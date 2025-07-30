@@ -2,6 +2,7 @@ import sys
 import urllib.request
 import urllib.error
 import json
+from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -29,27 +30,29 @@ def fetch_github_activity(username):
 def format_event(event):
     type = event["type"]
     repo = event["repo"]["name"]
+    created_at = datetime.strptime(event["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+    time_str = created_at.strftime("%b %d, %Y %H:%M UTC")
 
     if type == "PushEvent":
         count = len(event["payload"]["commits"])
-        return f"🚀 Pushed {count} commit(s) to [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — 🚀 Pushed {count} commit(s) to [cyan]{repo}[/]"
     elif type == "IssuesEvent":
         action = event["payload"]["action"]
-        return f"🐛 {action.capitalize()} an issue in [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — 🐛 {action.capitalize()} an issue in [cyan]{repo}[/]"
     elif type == "WatchEvent":
-        return f"⭐ Starred [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — ⭐ Starred [cyan]{repo}[/]"
     elif type == "ForkEvent":
-        return f"🍴 Forked [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — 🍴 Forked [cyan]{repo}[/]"
     elif type == "CreateEvent":
         ref_type = event["payload"].get("ref_type", "repository")
-        return f"✨ Created a new {ref_type} in [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — ✨ Created a new {ref_type} in [cyan]{repo}[/]"
     else:
-        return f"🔍 {type} in [cyan]{repo}[/]"
+        return f"[bold white]{time_str}[/] — 🔍 {type} in [cyan]{repo}[/]"
 
 
 def display_activity(username):
     events = fetch_github_activity(username)
-    if not events:
+    if events is None:
         return
 
     if len(events) == 0:
@@ -67,7 +70,7 @@ def display_activity(username):
     table.add_column("#", style="dim", justify="right")
     table.add_column("Activity", style="bold green")
 
-    for i, event in enumerate(events[:10], 1):
+    for i, event in enumerate(events[:10], 1):  # GitHub returns newest first
         table.add_row(str(i), format_event(event))
 
     console.print(
