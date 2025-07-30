@@ -39,7 +39,22 @@ pip install -r requrements.txt
 ### Usage
 
 ```bash
-gitlog-cli --username
+python .\main.py --username
+```
+
+Or you can set up a global shortcut by editing your default profile.
+For Windows:
+
+```bash
+notepad.exe $PROFILE
+```
+
+Add this to your script with the correct path of the cloned repo.
+
+```notepad
+function github_activity {
+    python "C:\Users\..." $args
+}
 ```
 
 ### Author
