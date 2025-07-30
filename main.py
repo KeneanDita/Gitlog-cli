@@ -2,6 +2,13 @@ import sys
 import urllib.request
 import urllib.error
 import json
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich import box
+
+console = Console()
+
 
 def fetch_github_activity(username):
     url = f"https://api.github.com/users/{username}/events"
@@ -11,12 +18,13 @@ def fetch_github_activity(username):
                 return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
         if e.code == 404:
-            print(f"Error: GitHub user '{username}' not found.")
+            console.print(f"[bold red]❌ Error:[/] GitHub user '{username}' not found.")
         else:
-            print(f"HTTP Error: {e.code} - {e.reason}")
+            console.print(f"[bold red]❌ HTTP Error:[/] {e.code} - {e.reason}")
     except urllib.error.URLError as e:
-        print(f"Network Error: {e.reason}")
+        console.print(f"[bold red]🌐 Network Error:[/] {e.reason}")
     return None
+
 
 def format_event(event):
     type = event["type"]
@@ -24,33 +32,57 @@ def format_event(event):
 
     if type == "PushEvent":
         count = len(event["payload"]["commits"])
-        return f"Pushed {count} commit(s) to {repo}"
+        return f"🚀 Pushed {count} commit(s) to [cyan]{repo}[/]"
     elif type == "IssuesEvent":
         action = event["payload"]["action"]
-        return f"{action.capitalize()} an issue in {repo}"
+        return f"🐛 {action.capitalize()} an issue in [cyan]{repo}[/]"
     elif type == "WatchEvent":
-        return f"Starred {repo}"
+        return f"⭐ Starred [cyan]{repo}[/]"
     elif type == "ForkEvent":
-        return f"Forked {repo}"
+        return f"🍴 Forked [cyan]{repo}[/]"
     elif type == "CreateEvent":
         ref_type = event["payload"].get("ref_type", "repository")
-        return f"Created a new {ref_type} in {repo}"
+        return f"✨ Created a new {ref_type} in [cyan]{repo}[/]"
     else:
-        return f"{type} in {repo}"
+        return f"🔍 {type} in [cyan]{repo}[/]"
+
 
 def display_activity(username):
     events = fetch_github_activity(username)
     if not events:
-        print(f"No recent public activity found for '{username}'.")
         return
 
-    print(f"\nRecent activity for GitHub user: {username}")
-    print("-" * 50)
-    for i, event in enumerate(events[:10], start=1):
-        print(f"{i}. {format_event(event)}")
+    if len(events) == 0:
+        console.print(f"[yellow]No recent public activity found for '{username}'.[/]")
+        return
+
+    table = Table(
+        title=f"📊 GitHub Activity for [bold cyan]{username}[/]",
+        box=box.ROUNDED,
+        title_justify="center",
+        expand=False,
+        padding=(0, 1),
+        border_style="bright_blue",
+    )
+    table.add_column("#", style="dim", justify="right")
+    table.add_column("Activity", style="bold green")
+
+    for i, event in enumerate(events[:10], 1):
+        table.add_row(str(i), format_event(event))
+
+    console.print(
+        Panel.fit(
+            table,
+            title="gitlog-cli",
+            subtitle="🧰 Terminal GitHub Activity Tracker",
+            border_style="magenta",
+            padding=(1, 2),
+        )
+    )
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python github_activity.py <github_username>")
+        console.print("[bold yellow]Usage:[/] python gitlog_cli.py <github_username>")
     else:
         display_activity(sys.argv[1])
