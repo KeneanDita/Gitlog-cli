@@ -34,7 +34,8 @@ def format_event(event):
     time_str = created_at.strftime("%b %d, %Y %H:%M UTC")
 
     if type == "PushEvent":
-        count = len(event["payload"]["commits"])
+        # FIX: Check if 'commits' key exists before accessing it
+        count = len(event["payload"].get("commits", []))
         return f"[bold white]{time_str}[/] — 🚀 Pushed {count} commit(s) to [cyan]{repo}[/]"
     elif type == "IssuesEvent":
         action = event["payload"]["action"]
