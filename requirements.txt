@@ -1,3 +1,2 @@
-urllib
-json
+urllib3
 rich
